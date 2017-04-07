@@ -9,29 +9,27 @@ The general reconstruction model is given by
   subject to  u >= 0 
 ```
 
-where u is the attenuation image, v is the flat-field.
+where u is the attenuation image and v is the flat-field.
 
 Reconstruction models:
 
-'JMAP' : Joint MAP estimation of u and v. (default)
+'JMAP'     : Joint MAP estimation of u and v. (default)
 
-'BASELINE' : Solves baseline reconstruction (inverse crime) where v is replace by the true flat-field.
+'BASELINE' : Solves baseline reconstruction (inverse crime) where v is replaced by the true flat-field.
 
-'AMAP' : Solves approximate MAP estimatation problem where v is replaced by the flat-field ML estimate.
+'AMAP'     : Solves approximate MAP estimatation problem where v is replaced by the flat-field ML estimate.
 
-'WLS' : Solves weighted least-squares approximation where v is replaced by the flat-field ML estimate.
+'WLS'      : Solves weighted least-squares approximation where v is replaced by the flat-field ML estimate.
 
-'SWLS' : Solves stripe-weighted least-squares approximation where v is replaced by the flat-field ML estimate.
+'SWLS'     : Solves stripe-weighted least-squares approximation where v is replaced by the flat-field ML estimate.
 
 # Dependencies
-* ASTRA Toolbox
-* Weblink: http://www.astra-toolbox.com/
+* ASTRA Toolbox Weblink: http://www.astra-toolbox.com/
 
-AIR Tools
-Weblink: http://www.imm.dtu.dk/~pcha/AIRtools/
+* AIR Tools Weblink: http://www.imm.dtu.dk/~pcha/AIRtools/
 
 # Citation:
-A Convex Reconstruction Model for X-ray tomographic Imaging with Uncertain Flat-fields. (Under Review)
+A Convex Reconstruction Model for X-ray tomographic Imaging with Uncertain Flat-fields. (Under Review in IEEE Transactions on Computational Imaging)
 
 # Help/Support:
 Email to Hari Om Aggrawal (hariom85@gmail.com)
