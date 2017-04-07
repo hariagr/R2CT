@@ -4,8 +4,10 @@ This MATLAB package provides several reconstruction models for X-ray tomographic
 
 The general reconstruction model is given by
 
+```
   minimize    J(u,v) + lambda*TV(u)
   subject to  u >= 0 
+```
 
 where u is the attenuation image, v is the flat-field.
 
@@ -22,8 +24,8 @@ Reconstruction models:
 'SWLS' : Solves stripe-weighted least-squares approximation where v is replaced by the flat-field ML estimate.
 
 # Dependencies
-ASTRA Toolbox
-Weblink: http://www.astra-toolbox.com/
+* ASTRA Toolbox
+* Weblink: http://www.astra-toolbox.com/
 
 AIR Tools
 Weblink: http://www.imm.dtu.dk/~pcha/AIRtools/
