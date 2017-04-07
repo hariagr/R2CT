@@ -24,9 +24,9 @@ Reconstruction models:
 'SWLS'     : Solves stripe-weighted least-squares approximation where v is replaced by the flat-field ML estimate.
 
 # Dependencies
-* ASTRA Toolbox Weblink: http://www.astra-toolbox.com/
+* ASTRA Toolbox http://www.astra-toolbox.com/
 
-* AIR Tools Weblink: http://www.imm.dtu.dk/~pcha/AIRtools/
+* AIR Tools http://www.imm.dtu.dk/~pcha/AIRtools/
 
 # Citation:
 A Convex Reconstruction Model for X-ray tomographic Imaging with Uncertain Flat-fields. (Under Review in IEEE Transactions on Computational Imaging)
