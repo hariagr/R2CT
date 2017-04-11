@@ -28,6 +28,8 @@ Reconstruction models:
 
 * AIR Tools http://www.imm.dtu.dk/~pcha/AIRtools/
 
+* Spot – A Linear-Operator Toolbox https://github.com/mpf/spot
+
 # Citation:
 A Convex Reconstruction Model for X-ray tomographic Imaging with Uncertain Flat-fields. (Under Review in IEEE Transactions on Computational Imaging)
 
