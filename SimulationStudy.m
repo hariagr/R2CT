@@ -29,25 +29,25 @@ else
 end
 fprintf(1,'GPU ID: %i\n',GPU_ID);
 
-if exist('use_astra') == 0
-    use_astra = 0;
-end
+% Flag - Astra: 1, AIRTOOL:0 
+use_astra = 1;
 
 % Simulation parameters
-I0 = 5e2;         % Source intensity
-n = 512;          % Grid size (n x n)
-r = n;            % Number of detector elements
-dw = n;           % Detector width
-p = 720;          % Number of projections
-s = 5;            % Number of flat-field samples
-dsz = 2;          % Domain size (cm)
+I0  = 5e2;         % Source intensity
+n   = 512;         % Grid size (n x n)
+r   = n;           % Number of detector elements
+dw  = n;           % Detector width
+p   = 720;         % Number of projections
+s   = 5;           % Number of flat-field samples
+dsz = 2;           % Domain size (cm)
 
 % Reconstruction parameters
 models = 'jmap'; % Reconstruction models {'baseline','amap','wls','swls','jmap'}
-beta = 0;        % Flat-field reg. parameter
+beta   = 0;      % Flat-field reg. parameter
+u0     = 'amap'; % Initialization 'amap' OR zero
 
-tv_reg = 3;       % Total variation reg. parameter
-maxiters = 500;   % Number of iterations
+tv_reg   = 3;    % Total variation reg. parameter
+maxiters = 500;  % Number of iterations
 
 %% Set up forward operator and generate problem data
 
@@ -107,6 +107,7 @@ options = struct(...
     'u0',zeros(n*n,1),...
     'rho',1.8,...
     'tau',1e-2,...
+    'tolf',1e-8,...
     'lambda',tv_reg,...
     'maxiters',maxiters,...
     'uhold',[50],...
@@ -115,11 +116,22 @@ options = struct(...
     'mask',true,...
     'verbose',1);
 
+% Initialization u0 estimate
+if strcmp(u0,'amap')
+    options.model = 'amap';
+    options.maxiters = 100;
+    
+    fprintf(1,'Estimating u0 using AMAP reconstruction model\n');
+    options.u0 = poiss_gamma_nhtv(A,F,Y,options);
+else
+    options.u0 = zeros(n*n,1);
+end
+
 options.model = models;
 options.beta = beta;
-options.u0 = zeros(n*n,1);
 options.vprior = mean(F,2);
-        
+options.maxiters = maxiters;
+
 fprintf(1,'Solving %s reconstruction problem..\n',models);
 [u,iterinfo] = poiss_gamma_nhtv(A,F,Y,options);
 
@@ -165,7 +177,7 @@ imagesc(reshape(u,n,n),[0 max(x)]);colormap gray;axis off image
 title([upper(models) ' reconstruction']);
 
 subplot(1,3,3);
-imagesc(psi);colormap gray;axis off image
+imagesc(abs(psi));colormap gray;axis off image
 title('Ring Image');
 
 fprintf('Error measures\n');

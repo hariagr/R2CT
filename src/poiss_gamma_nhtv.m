@@ -34,6 +34,7 @@ function [u, iterinfo] = poiss_gamma_nhtv(A,F,Y,options)
 %
 %    'model'      {'jmap','baseline','amap','wls','swls'}
 %    'maxiters'   Maximum number of iterations  (default: 200)
+%    'tolf'       Toleration relative objective value (default:1e-8)
 %    'rho'        Gradient step multiplier      (default: 1.5)
 %    'lambda'     TV-regularization parameter   (default: 0.0)
 %    'tau'        TV-smoothing parameter        (default: 1e-2)
@@ -78,6 +79,13 @@ if isfield(options,'maxiters')
     maxiters = options.maxiters;
 else
     maxiters = 200;
+end
+
+% Stopping tolerance for relative change in objective function
+if isfield(options,'tolf')
+    tolf = options.tolf;
+else
+    tolf = 1e-8;
 end
 
 % Save intermediate iterations
@@ -218,6 +226,7 @@ if verbose
     fprintf(1,'%4s %12s %8s %8s\n','it.','objval','opt','step'); 
 end
 fhist = zeros(maxiters+1,1);
+fold = 0;
 for it = 1:maxiters+1
     if exist('relerr','var') == 1
         % Compute relative error
@@ -246,9 +255,15 @@ for it = 1:maxiters+1
         end
         fprintf(1,'%4i %12.6e %8.2e %8.2e\n',it-1,fhist(it),norm(nopt),t*norm(grad));
     end
-    if it == maxiters+1
+    
+    % Stopping criteria
+    STOP(1) = abs(fhist(it)-fold)  <= tolf*(1+abs(fold));
+    STOP(2) = (it >= maxiters + 1);
+    %if it == maxiters+1
+    if STOP(1) || STOP(2)
         break
     end
+    fold = fhist(it); % update function value
     
     % Update u
     u = max(0,u-t*grad);
@@ -280,6 +295,8 @@ else
 end
 iterinfo.theta = [s*ones(r,1) d(u)-beta-s beta]./repmat(d(u),1,3);
 iterinfo.options = options;
+iterinfo.maxiter = it-1;
+iterinfo.relobjval = abs(fhist(it)-fold)/(1+abs(fold));
 
 end
 
