@@ -11,6 +11,7 @@ This MATLAB package provides implementations of reconstruction models for X-ray 
 The reconstruction models proposed in the paper are suitable when only a small number of flat-field samples are available or when the flat-field estimate is noisy or uncertain. Instead of using the maximum likelihood (ML) estimate of the flat-field in a separate approximate maximum aposteriori (MAP) reconstruction model, the proposed models (which we refer to as JMAP and SWLS) jointly estimate the attenuation image and the flat-field. In addition to these new models, the package also includes several existing reconstruction models that use the ML estimate of the flat-field. The general reconstruction model is given by
 <center>
 <img src="https://latex.codecogs.com/png.latex?\begin{array}{ll}&space;\mbox{minimize}&space;&&space;J(u)&plus;\lambda\,\mathrm{TV}_{\delta}(u)\\&space;\mbox{subject&space;to}&space;&&space;u&space;\geq&space;0&space;\end{array}" title="\begin{array}{ll} \mbox{minimize} & J(u;v(u))+\lambda\,\mathrm{TV}_{\delta}(u)\\ \mbox{subject to} & u \geq 0 \end{array}" />
+!(model)[https://latex.codecogs.com/png.latex?\begin{array}{ll}&space;\mbox{minimize}&space;&&space;J(u)&plus;\lambda\,\mathrm{TV}_{\delta}(u)\\&space;\mbox{subject&space;to}&space;&&space;u&space;\geq&space;0&space;\end{array}]
 </center>
 
 where the variable u denotes the attenuation coefficients (the image), v(u) denotes the flat-field (possibly as a function of u), and J is a convex function of u, corresponding to one of the following reconstruction models:
