@@ -25,7 +25,7 @@ For more information about the different models, refer to the [paper](http://peo
 
 As demonstrated with the reconstructions below, the JMAP and SWLS models proposed in the [paper](http://people.compute.dtu.dk/mskan/papers/flatfield.pdf) can significantly reduce ring artifacts that arise because of flat-field estimation errors; refer to the paper for details about this numerical experiment.
 
-<div align="center">
+<div style="text-align:center">
 <table style="border: none; text-align: center;">
 <tr>
 	<td>Baseline FBP (inverse crime)</td>
@@ -62,7 +62,7 @@ As demonstrated with the reconstructions below, the JMAP and SWLS models propose
 
 In order to assess the reduction of ring artifacts in reconstructions, we proposed the "Ring Ratio" error measure in the [paper](http://people.compute.dtu.dk/mskan/papers/flatfield.pdf) which quantifies the flat-field error in the image domain. The ring images as shown below clearly demonstrates the effectiveness of the JMAP model.
 
-<div align="center">
+<div style="text-align:center">
 <table style="border: none; text-align: center;">
 <tr>
 	<td>Baseline MAP (inverse crime)</td>
