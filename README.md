@@ -13,7 +13,6 @@ The reconstruction models proposed in the paper are suitable when only a small n
 <img src="images/optprb.png"/>
 </center>
 
-
 where the variable u denotes the attenuation coefficients (the image), v(u) denotes the flat-field (possibly as a function of u), and J is a convex function of u, corresponding to one of the following reconstruction models:
 
 - `jmap` (default) — equivalent to joint MAP estimation of u and flatfield
