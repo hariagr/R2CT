@@ -9,9 +9,9 @@ This MATLAB package provides implementations of reconstruction models for X-ray 
 >  [![pdf](http://wwwimages.adobe.com/content/dam/acom/en/legal/images/badges/Adobe_PDF_file_icon_24x24.png)](http://people.compute.dtu.dk/mskan/papers/flatfield.pdf)
 
 The reconstruction models proposed in the paper are suitable when only a small number of flat-field samples are available or when the flat-field estimate is noisy or uncertain. Instead of using the maximum likelihood (ML) estimate of the flat-field in a separate approximate maximum aposteriori (MAP) reconstruction model, the proposed models (which we refer to as JMAP and SWLS) jointly estimate the attenuation image and the flat-field. In addition to these new models, the package also includes several existing reconstruction models that use the ML estimate of the flat-field. The general reconstruction model is given by
-<center>
+<div align="center">
 <img src="images/optprb.png"/>
-</center>
+</div>
 
 where the variable u denotes the attenuation coefficients (the image), v(u) denotes the flat-field (possibly as a function of u), and J is a convex function of u, corresponding to one of the following reconstruction models:
 
