@@ -12,7 +12,6 @@ The reconstruction models proposed in the paper are suitable when only a small n
 <div align="center">
 <img src="images/optprb.png"/>
 </div>
-
 where the variable u denotes the attenuation coefficients (the image), v(u) denotes the flat-field (possibly as a function of u), and J is a convex function of u, corresponding to one of the following reconstruction models:
 
 - `jmap` (default) — equivalent to joint MAP estimation of u and flatfield
@@ -25,7 +24,7 @@ For more information about the different models, refer to the [paper](http://peo
 
 As demonstrated with the reconstructions below, the JMAP and SWLS models proposed in the [paper](http://people.compute.dtu.dk/mskan/papers/flatfield.pdf) can significantly reduce ring artifacts that arise because of flat-field estimation errors; refer to the paper for details about this numerical experiment.
 
-<center>
+<div align="center">
 <table style="border: none; text-align: center;">
 <tr>
 	<td>Baseline FBP (inverse crime)</td>
@@ -58,11 +57,11 @@ As demonstrated with the reconstructions below, the JMAP and SWLS models propose
   <td><img src="images/grain_swls1.png" /></td>
 </tr>
 </table>
-</center>
+</div>
 
 In order to assess the reduction of ring artifacts in reconstructions, we proposed the "Ring Ratio" error measure in the [paper](http://people.compute.dtu.dk/mskan/papers/flatfield.pdf) which quantifies the flat-field error in the image domain. The ring images as shown below clearly demonstrates the effectiveness of the JMAP model.
 
-<center>
+<div align="center">
 <table style="border: none; text-align: center;">
 <tr>
 	<td>Baseline MAP (inverse crime)</td>
@@ -75,7 +74,7 @@ In order to assess the reduction of ring artifacts in reconstructions, we propos
   <td><img src="images/grain_jmap1_ring.png" /></td>
 </tr>
 </table>
-</center>
+</div>
 
 ## Examples
 
