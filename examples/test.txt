@@ -1,0 +1,14 @@
+Data File Name: APS_13_BM_01.h5
+Sample Name: Dorthe_f
+Instrument: APS 13-BM
+Energy: 
+Monochromator: double crystal Si (1,1,1)
+Scan Range: 180 degree
+Number of Projections: 900
+White Fields: 20
+Dark Fields: none
+Exposure Time = 
+PixelSize = 1.5 um nm
+Comment = 10x 60nm ZP
+
+(original log: APS_13_B

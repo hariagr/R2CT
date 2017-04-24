@@ -1,15 +1,34 @@
-%% Simulation study - Reconstruction of a phantom
+%% Reconstruction of a software phantom
 % 
-% To generate system matrix either use ASTRA toolbox or AIR
-% Tool MATLAB Toolbox.
-% To generate phantom use AIR Tool MATLAB Toolbox
+% This example demonstrate the basic use case of toolbox. 
 % 
-% System geometry - Parallel beam
 %
+% In this script, we have implemented two options to generate system matrix
+% i.e. either using ASTRA toolbox or AIR Tool MATLAB Toolbox.
+% 
+% The software phantom is generated from AIR Tool MATLAB Toolbox.
+% 
+% The experimental settings are described in the following paper
+%   Hari Om Aggrawal, Martin S. Andersen, Sean Rose, and Emil Sidky,
+%   "A Convex Reconstruction Model for X-ray tomographic Imaging with
+%   Uncertain Flat-fields", submitted to IEEE Transactions on
+%   Computational Imaging, 2017. 
+%
+clc;clear;
+
+% Check that gd_recon.m is in the path
+if exist('gd_recon') ~= 2
+    if exist(fullfile('..','src','gd_recon.m')) == 2
+        addpath(fullfile('..','src'));
+    else
+        error('Could not find gd_recon.m')
+    end
+end
 
 % Set RNG seed
 rng(0,'twister');
 
+% Job setup
 JOBID = getenv('PBS_JOBID');
 if strcmp(JOBID,'')
     JOBID = datestr(now,'yymmddHHMMSS');
@@ -30,11 +49,11 @@ end
 fprintf(1,'GPU ID: %i\n',GPU_ID);
 
 % Flag - Astra: 1, AIRTOOL:0 
-use_astra = 1;
+use_astra = 0;
 
 % Simulation parameters
 I0  = 5e2;         % Source intensity
-n   = 512;         % Grid size (n x n)
+n   = 128;         % Grid size (n x n)
 r   = n;           % Number of detector elements
 dw  = n;           % Detector width
 p   = 720;         % Number of projections
@@ -44,9 +63,9 @@ dsz = 2;           % Domain size (cm)
 % Reconstruction parameters
 models = 'jmap'; % Reconstruction models {'baseline','amap','wls','swls','jmap'}
 beta   = 0;      % Flat-field reg. parameter
-u0     = 'amap'; % Initialization 'amap' OR zero
+u0     = 'amap'; % Initialization based on 'amap' OR zero
 
-tv_reg   = 3;    % Total variation reg. parameter
+tv_reg   = 7;    % Total variation reg. parameter - 7
 maxiters = 500;  % Number of iterations
 
 %% Set up forward operator and generate problem data
@@ -67,13 +86,13 @@ if use_astra
     A_2n = opFoG(P',(dsz/(4*n))*opTomo('cuda', proj_geom_2n, vol_geom_2n, GPU_ID));
 
 else
-    % Use modified AIR Tools 'paralleltomo'
+    % Use AIR Tools 'paralleltomo'
     theta = (0:p-1)*180/p;
     A = paralleltomo(n,theta,r,n);
     A = (dsz/n)*A;
     
     A_2n = paralleltomo(2*n,theta,r,2*n);
-    A_2n = (dsz/(4*n))*A_2n;
+    A_2n = (dsz/(2*n))*A_2n;
 end
 
 % Phantom on the fine grid
@@ -119,10 +138,10 @@ options = struct(...
 % Initialization u0 estimate
 if strcmp(u0,'amap')
     options.model = 'amap';
-    options.maxiters = 100;
+    options.maxiters = 50;
     
-    fprintf(1,'Estimating u0 using AMAP reconstruction model\n');
-    options.u0 = poiss_gamma_nhtv(A,F,Y,options);
+    fprintf(1,'Estimating u0 as 50th iterate of AMAP reconstruction model\n');
+    options.u0 = gd_recon(A,F,Y,options);
 else
     options.u0 = zeros(n*n,1);
 end
@@ -133,7 +152,15 @@ options.vprior = mean(F,2);
 options.maxiters = maxiters;
 
 fprintf(1,'Solving %s reconstruction problem..\n',models);
-[u,iterinfo] = poiss_gamma_nhtv(A,F,Y,options);
+[u,iterinfo] = gd_recon(A,F,Y,options);
+
+
+% AMAP reconstruction to compare with JMAP reconstruction
+options.model = 'amap';
+options.u0 = zeros(n*n,1);
+
+fprintf(1,'Solving %s reconstruction problem..\n',options.model);
+[u_amap,iterinfo_amap] = gd_recon(A,F,Y,options);
 
 %% Ring Ratio and Ring images
 
@@ -141,51 +168,62 @@ fprintf(1,'Solving %s reconstruction problem..\n',models);
 [XX,YY] = meshgrid(linspace(-1,1,n),linspace(-1,1,n));
 mask = (XX(:).^2 + YY(:).^2 > 1);
 clear('XX','YY');
-  
-% Ring image from empirical mean estimate
-z = (mean(F,2) - vref)./vref;
-z = repmat(z,1,p);
-if use_astra 
-    psi_emp = astrafbp(proj_geom,vol_geom,n,dsz,z');
-else
-    psi_emp = iradon(z,theta,n);
-end
-psi_emp(mask) = 0;
 
-% Ring image from reconstruction model estimates
-z = (iterinfo.vhu(:,maxiters) - vref)./vref;
-z = repmat(z,1,p);
-if use_astra 
-    psi = astrafbp(proj_geom,vol_geom,n,dsz,z');
-else
-    psi = iradon(z,theta,n);
+if ~use_astra
+    proj_geom = []; vol_geom=[];
 end
-psi(mask) = 0;
+rrInfo = struct(...
+            'proj_geom',proj_geom,...
+            'vol_geom',vol_geom,...
+            'p', p,...
+            'n',n,...
+            'dsz',dsz,...
+            'theta',theta,...
+            'mask',mask,...
+            'use_astra',use_astra);
 
-% Ring ratio
-ring_ratio = norm(psi(:),2)/norm(psi_emp(:),2);
+% Ring Ratio error measures
+vml = mean(F,2);
+vest = iterinfo.vhu(:,iterinfo.maxiter);
+[ringRatio, ringImage] = rr_errMeas(vref,vml,vest,rrInfo);
+
+vml = mean(F,2);
+vest = iterinfo_amap.vhu(:,iterinfo.maxiter);
+[ringRatio_amap, ringImage_amap] = rr_errMeas(vref,vml,vest,rrInfo);
 
 %% Display results
 
 figure;
-subplot(1,3,1);
-imagesc(reshape(x,n,n),[0 max(x)]);colormap gray;axis off image
+subplot(2,3,1);
+imagesc(reshape(x,n,n),[0 max(x)]);colormap gray;axis off image;colorbar
 title('Phantom')
 
-subplot(1,3,2);
-imagesc(reshape(u,n,n),[0 max(x)]);colormap gray;axis off image
+subplot(2,3,2);
+imagesc(reshape(u_amap,n,n),[0 max(x)]);colormap gray;axis off image;colorbar
+title(['AMAP reconstruction']);
+
+subplot(2,3,3);
+imagesc(reshape(u,n,n),[0 max(x)]);colormap gray;axis off image;colorbar
 title([upper(models) ' reconstruction']);
 
-subplot(1,3,3);
-imagesc(abs(psi));colormap gray;axis off image
-title('Ring Image');
+scale = max(abs(ringImage_amap(:)))*0.5;
+subplot(2,3,5);
+imagesc(abs(ringImage_amap),[0 scale]);colormap gray;axis off image;colorbar
+title('Ring Image - AMAP');
+
+subplot(2,3,6);
+imagesc(abs(ringImage),[0 scale]);colormap gray;axis off image;colorbar
+title('Ring Image - JMAP');
 
 fprintf('Error measures\n');
-fprintf('Relative attenuation error = %.2f%%\n',100*iterinfo.relerr(maxiters));
-fprintf('Ring ratio = %.2f\n',ring_ratio);
+fprintf('AMAP: Relative attenuation error = %.2f%%\n',100*iterinfo_amap.relerr(iterinfo_amap.maxiter));
+fprintf('AMAP: Ring ratio = %.2f\n \n',ringRatio_amap);
+
+fprintf('JMAP: Relative attenuation error = %.2f%%\n',100*iterinfo.relerr(iterinfo.maxiter));
+fprintf('JMAP: Ring ratio = %.2f\n',ringRatio);
 
 %% Save results
 
 clear('A');
-save([JOBNAME,'_astra_',JOBID,'.mat']);
+save([JOBNAME,'_',JOBID,'.mat']);
 

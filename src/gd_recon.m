@@ -1,48 +1,101 @@
-function [u, iterinfo] = poiss_gamma_nhtv(A,F,Y,options)
-% POISS_GAMMA_NHTV   MAP Estimation based on Poisson likelihood 
-% with a Gamma flat-field prior and a nonnegativity + Huber-TV 
-% attenuation prior. The general reconstruction model is given by
+function [u,iterinfo] = gd_recon(A,F,Y,options)
+% GD_RECON    Gradient descent method for X-ray tomographic
+% reconstructions based on the model
 %
-%    minimize    J(u,v) + lambda*TV(u)
-%    subject to  u >= 0 
+%   minimize    J(u;v) + lambda*hTV(u;delta)
+%   subject to  u >= 0 
 %
-% where u is the attenuation image, v is the flat-field, and 
+% where u is the attenuation image, v is the flat-field, delta is a
+% smoothing parameter, and lambda is a nonnegative regularization
+% parameter.   
 %
-%    J(u,v) = v'*d(u) + Y(:)'*A*u - c'*log(v) 
-%    c = sum(F,2) + sum(Y,2) + alpha - 1
-%    d(u) = s + sum(reshape(exp(-A*u),r,p),2) + beta
+% The function J(u;v) can be one of several functions and
+% determines the reconstruction model:
 %
-% and where A is m-by-n, Y is r-by-p, and F is r-by-s.
+%   'jmap' : joint MAP model (default)
 %
-% Reconstruction models:
+%       J(u;v) =  v'*d(u) + Y(:)'*A*u - c'*log(v),  v = c./d(u) 
+%    
+%       with c = sum(F,2) + sum(Y,2) + alpha - 1,
+%         d(u) = s + sum(reshape(exp(-A*u),r,p),2) + beta,
+%         
+%   'swls' : stripe-weighted least-squares approximation of 'jmap'
 %
-%   * 'jmap' : Joint MAP estimation of u and v. (default)
+%       J(u;v) = 0.5*(A*x-b)*inv(Sigma)*(A*x-b)
 %
-%   * 'baseline' : Solves baseline reconstruction (inverse crime) where
-%      v is replace by the true flat-field (i.e., v = options.vref).
+%       with b = -log(Y(:)./repmat(mean(F,2),p)),
+%        Sigma = SymPerm(blkdiag(S1,...,Sr))
 %
-%   * 'amap' : Solves approximate MAP estimatation problem where v is  
-%      replaced by the ML estimate (i.e., v = mean(F,2)).
+%   'baseline' : baseline MAP model (inverse crime!)
 %
-%   * 'wls' : Solves weighted least-squares approximation where v is  
-%      replaced by the ML estimate (i.e., v = mean(F,2)).
+%       J(u;v) =  v'*d(u) + Y(:)'*A*u,  v = options.vref
 %
-%   * 'swls' : Solves stripe-weighted least-squares approximation where
-%      v is replaced by the ML estimate (i.e., v = mean(F,2)).
+%   'amap' : approximate MAP model
+%
+%       J(u;v) =  v'*d(u) + Y(:)'*A*u,  v = mean(F,2)
+%
+%   'wls' : weighted least-squares approximation of 'amap'
+%
+%       J(u;v) = 0.5*(A*x-b)*inv(Sigma)*(A*x-b)
+%
+%       with b = -log(Y(:)./repmat(mean(F,2),p))
+%        Sigma = diag(1./y)
+%
+% The function hTV denotes discrete total variation with smoothing,
+% i.e.,   
+%
+%   hTV(u;delta) = sum_i Huber(||Di*u||_2; delta)
+% 
+% where Huber(t,delta) denotes the Huber norm with parameter delta.
+%   
+% The inputs A, Y, and F are required: A (m-by-n) is the system matrix
+% (or a Spot operator), Y (r-by-p) is the matrix of measurements
+% where each column corresponds to a projection, and F (r-by-s) is
+% a matrix with s flat-field samples. The system matrix should map
+% the vector of attenuation coefficients u into the vectorized
+% sinogram, ie., b = A*x if B = reshape(b,r,p) is the sinogram.
 %
 % The optional input 'options' is a struct with one or more fields:
 %
-%    'model'      {'jmap','baseline','amap','wls','swls'}
-%    'maxiters'   Maximum number of iterations  (default: 200)
-%    'tolf'       Toleration relative objective value (default:1e-8)
-%    'rho'        Gradient step multiplier      (default: 1.5)
-%    'lambda'     TV-regularization parameter   (default: 0.0)
-%    'tau'        TV-smoothing parameter        (default: 1e-2)
-%    'alpha'      Flat-field hyperparameter     (default: 1.0)
-%    'beta'       Flat-field hyperparameter     (default: 0.0)
-%    'u0'         Starting point                (default: zeros(n,1))
-%    'uref'       Reference image (for simulation studies only)
-%    'vref'       Reference flat-field (for simulation studies only)
+%   'model'      {'jmap','baseline','amap','wls','swls'}
+%   'maxiters'   Maximum number of iterations  (default: 200)
+%   'tolf'       Tolerance, rel. obj. value    (default:1e-8)
+%   'rho'        Gradient step multiplier      (default: 1.5)
+%   'lambda'     TV-regularization parameter   (default: 0.0)
+%   'tau'        TV-smoothing parameter        (default: 1e-2)
+%   'alpha'      Flat-field hyperparameter     (default: 1.0)
+%   'beta'       Flat-field hyperparameter     (default: 0.0)
+%   'u0'         Starting point                (default: zeros(n,1))
+%   'uref'       Reference image (for simulation studies only)
+%   'vref'       Reference flat-field (for simulation studies only)
+%   'uhold'      List of indices of intermediate iterates to return
+%
+% The return value u is the vectorized reconstruction of the
+% attenuation coefficients, and iterinfo is a struct with
+% information pertaining to the iterates and the reconstruction:
+%
+%   'vhu'        Flat-field MAP estimate
+%   'theta'      Pixelwise flat-field weights
+%   'ngrad'      Normalized gradient image (vectorized)
+%   'optu'       Attenuation image optimality cond. (vectorized)
+%   'relerr'     Relative error (if options.uref is specified)
+%   'uhold'      Intermediate iterates (if options.uhold is specified)
+%
+% Reference:
+%   Hari Om Aggrawal, Martin S. Andersen, Sean Rose, and Emil Sidky,
+%   "A Convex Reconstruction Model for X-ray tomographic Imaging with
+%   Uncertain Flat-fields", submitted to IEEE Transactions on
+%   Computational Imaging, 2017. 
+%
+% License: 
+%   GPL-3
+%
+% Authors: 
+%   Hari Om Aggrawal (hariom85@gmail.com) 
+%   Martin S. Andersen (mskan@dtu.dk)
+% 
+% Date: 
+%   April 19, 2017
     
 % Check/extract problem dimensions
 [r,p] = size(Y);
