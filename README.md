@@ -4,7 +4,7 @@ This MATLAB package provides implementations of reconstruction models for X-ray 
 
 > Hari Om Aggrawal, Martin S. Andersen, Sean Rose, and Emil Sidky, 
 > "A Convex Reconstruction Model for X-ray tomographic Imaging with Uncertain Flat-fields", 
-> submitted to *IEEE Transactions on Computational Imaging*, 2017. 
+> *IEEE Transactions on Computational Imaging*, 2017. 
 >
 >  [![pdf](http://wwwimages.adobe.com/content/dam/acom/en/legal/images/badges/Adobe_PDF_file_icon_24x24.png)](http://people.compute.dtu.dk/mskan/papers/flatfield.pdf)
 
