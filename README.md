@@ -6,7 +6,7 @@ This MATLAB package provides implementations of reconstruction models for X-ray 
 > "A Convex Reconstruction Model for X-ray tomographic Imaging with Uncertain Flat-fields", 
 > *IEEE Transactions on Computational Imaging*, 2017. 
 >
->  [![pdf](http://wwwimages.adobe.com/content/dam/acom/en/legal/images/badges/Adobe_PDF_file_icon_24x24.png)](http://people.compute.dtu.dk/mskan/papers/flatfield.pdf)
+>  [![pdf](http://wwwimages.adobe.com/content/dam/acom/en/legal/images/badges/Adobe_PDF_file_icon_24x24.png)](http://ieeexplore.ieee.org/document/7967846/)
 
 The reconstruction models proposed in the paper are suitable when only a small number of flat-field samples are available or when the flat-field estimate is noisy or uncertain. Instead of using the maximum likelihood (ML) estimate of the flat-field in a separate approximate maximum aposteriori (MAP) reconstruction model, the proposed models (which we refer to as JMAP and SWLS) jointly estimate the attenuation image and the flat-field. In addition to these new models, the package also includes several existing reconstruction models that use the ML estimate of the flat-field. The general reconstruction model is given by
 <div align="center">
